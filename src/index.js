@@ -122,6 +122,9 @@ async function init() {
 
     const newMesh = new THREE.Mesh( geometry, bulbMaterial )
     newMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z)
+    newMesh.scale.x = 0.2;
+    newMesh.scale.y = 0.2;
+    newMesh.scale.z = 0.2;
     scene.add(newMesh);
   }
   
