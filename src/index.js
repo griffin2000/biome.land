@@ -50,6 +50,7 @@ async function init() {
   scene.add(light);
   light.target.position.y = -10;
   light.target.position.z = +5;
+  scene.add( light.target );
 
   const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
   hemiLight.color.setHSL( 0.6, 1, 0.6 );
@@ -71,7 +72,11 @@ async function init() {
     renderer.render(scene, camera);
   }
 
-  var geometry = createBulbGeometry();
+  var geometry = createBulbGeometry({
+    stemRadius:0.05,
+    buldRadius: 0.2,
+    height:2.0,
+  });
 
 
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
@@ -108,7 +113,14 @@ async function init() {
   
   function onMouseClick() {
     console.log('mesh')
-    const newMesh = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() )
+
+    var geometry = createBulbGeometry({
+      stemRadius:0.05 + Math.random()*0.02,
+      buldRadius: 0.2 + Math.random()*0.05,
+      height:2.0+Math.random(),
+    });
+
+    const newMesh = new THREE.Mesh( geometry, bulbMaterial )
     newMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z)
     scene.add(newMesh);
   }

@@ -41,6 +41,8 @@ export function createBulbGeometry(options) {
       const baseHeight = options.baseHeight || 0.1;
       const baseRadius= options.baseRadius || 0.4;
 
+      const noiseMag = options.noiseMag || 0.02;
+
       if(v>bulbStart) {
         let dp = (v -bulbStart)/bulbHeight;
         dp = dp - 0.5;
@@ -59,6 +61,8 @@ export function createBulbGeometry(options) {
         d = Math.max(b,stemRadius);
 
       }
+      const randOffset = (Math.random() -0.5) * noiseMag;
+      d+=randOffset;
 
       const x = -d*Math.cos(phi);
       const z = d*Math.sin(phi);
