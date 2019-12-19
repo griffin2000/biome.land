@@ -15,13 +15,10 @@ export function createBulbGeometry(options) {
   var size = 1;
   var segments = options.segments || 30;
 
-  var halfSize = size / 2;
-  var segmentSize = size / segments;
   var uIncr = 1.0/(segments-1);
   var vIncr = 1.0/(segments);
 
-  const height = 1.0;
-  const radius = 0.5;
+  const height =  options.height || 2.0;
 
   // generate vertices, normals and color data for a simple grid geometry
 
@@ -41,16 +38,25 @@ export function createBulbGeometry(options) {
 
       const bulbHeight = options.bulbHeight ||0.5;
       const bulbStart = 1.0-bulbHeight;
+      const baseHeight = options.baseHeight || 0.1;
+      const baseRadius= options.baseRadius || 0.4;
+
       if(v>bulbStart) {
         let dp = (v -bulbStart)/bulbHeight;
         dp = dp - 0.5;
-        if(i==0)
-          console.log(j+":"+v+","+dp)
         const dpa = dp*Math.PI;
         d = bulbRadius* Math.cos(dpa);
         if(dp<0.0)
           d = Math.max(d,stemRadius);
 
+
+      }
+
+
+      else if(v<=baseHeight) {
+        const bp = 1.0-v/baseHeight;
+        let b = bp*bp*baseRadius;
+        d = Math.max(b,stemRadius);
 
       }
 

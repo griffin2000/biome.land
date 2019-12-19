@@ -48,7 +48,13 @@ async function init() {
   const light = new THREE.DirectionalLight( 0xFFFFFF, 3.0 );
   scene.add(light);
   light.target.position.y = -10;
+  light.target.position.z = +5;
 
+  const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+  hemiLight.color.setHSL( 0.6, 1, 0.6 );
+  hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+  hemiLight.position.set( 0, 50, 0 );
+  scene.add( hemiLight );
    
   var loader = new THREE.GLTFLoader();
 
@@ -70,7 +76,9 @@ async function init() {
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
   //geometry.translate( 0, 50, 0 );
   //geometry.rotateX( Math.PI / 2 );
-  const helper = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() );
+  const bulbMaterial = new THREE.MeshStandardMaterial();
+  bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
+  const helper = new THREE.Mesh( geometry,  bulbMaterial);
   scene.add( helper );
 
   if(intersects[0])
