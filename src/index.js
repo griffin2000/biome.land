@@ -59,8 +59,83 @@ async function init() {
     renderer.render(scene, camera);
   }
 
+  var geometry = new THREE.BufferGeometry();
 
-  const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
+  var indices = [];
+
+  var vertices = [];
+  var normals = [];
+  var colors = [];
+
+  var size = 1;
+  var segments = 10;
+
+  var halfSize = size / 2;
+  var segmentSize = size / segments;
+  var uIncr = 1.0/(segments-1);
+  var vIncr = 1.0/(segments-1);
+
+  const height = 1.0;
+  const radius = 0.5;
+
+  // generate vertices, normals and color data for a simple grid geometry
+
+  for ( var i = 0; i <= segments; i ++ ) {
+
+
+    for ( var j = 0; j <= segments; j ++ ) {
+
+
+      const u = i*uIncr;
+      const v = j*vIncr;
+      const phi = u*Math.PI*2.0;
+      const x = -radius*Math.cos(phi);
+      const z = radius*Math.sin(phi);
+      const y = v * height;
+
+      vertices.push( x, y, z );
+      normals.push( 0, 0, 1 );
+
+      var r = ( x / size ) + 0.5;
+      var g = ( y / size ) + 0.5;
+
+      colors.push( r, g, 1 );
+
+    }
+
+  }
+
+  // generate indices (data for element array buffer)
+
+  for ( var i = 0; i < segments; i ++ ) {
+
+    for ( var j = 0; j < segments; j ++ ) {
+
+      var a = i * ( segments + 1 ) + ( j + 1 );
+      var b = i * ( segments + 1 ) + j;
+      var c = ( i + 1 ) * ( segments + 1 ) + j;
+      var d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
+
+      // generate two faces (triangles) per iteration
+
+      indices.push( a, b, d ); // face one
+      indices.push( b, c, d ); // face two
+
+    }
+
+  }
+
+  //
+
+  geometry.setIndex( indices );
+  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+  geometry.computeVertexNormals ();
+
+
+
+  //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
   //geometry.translate( 0, 50, 0 );
   //geometry.rotateX( Math.PI / 2 );
   const helper = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() );
