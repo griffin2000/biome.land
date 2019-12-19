@@ -1,6 +1,7 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
 import {GLTFLoader} from './third-party/GLTFLoader'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
+import {createBulbGeometry} from './Bulb'
 
 var camera;
 var controls;
@@ -12,7 +13,7 @@ function loadGLTF(filename) {
     loader.load( 
      filename, 
     function ( gltf ) {
-      console.log("GLTF loaded");
+      
   
       resolve(gltf)
     }, 
@@ -51,91 +52,19 @@ async function init() {
    
   var loader = new THREE.GLTFLoader();
 
+  const collisGltf = await loadGLTF('assets/map_139586444_densified_gltf/map_139586444_densified_mesh_textured_lod2.gltf');
+  var collisMesh = collisGltf.scene.children[ 0 ];
   const gltf = await loadGLTF('assets/map_139586444_densified_gltf/map_139586444_densified_mesh_textured_lod0z.gltf');
 
   var mesh = gltf.scene.children[ 0 ];
   scene.add(mesh);
 
-  var intersects = raycaster.intersectObject( mesh );
-  console.log(intersects);
+  var intersects = raycaster.intersectObject( collisMesh );
   const render = () =>{
     renderer.render(scene, camera);
   }
 
-  var geometry = new THREE.BufferGeometry();
-
-  var indices = [];
-
-  var vertices = [];
-  var normals = [];
-  var colors = [];
-
-  var size = 1;
-  var segments = 10;
-
-  var halfSize = size / 2;
-  var segmentSize = size / segments;
-  var uIncr = 1.0/(segments-1);
-  var vIncr = 1.0/(segments-1);
-
-  const height = 1.0;
-  const radius = 0.5;
-
-  // generate vertices, normals and color data for a simple grid geometry
-
-  for ( var i = 0; i <= segments; i ++ ) {
-
-
-    for ( var j = 0; j <= segments; j ++ ) {
-
-
-      const u = i*uIncr;
-      const v = j*vIncr;
-      const phi = u*Math.PI*2.0;
-      const x = -radius*Math.cos(phi);
-      const z = radius*Math.sin(phi);
-      const y = v * height;
-
-      vertices.push( x, y, z );
-      normals.push( 0, 0, 1 );
-
-      var r = ( x / size ) + 0.5;
-      var g = ( y / size ) + 0.5;
-
-      colors.push( r, g, 1 );
-
-    }
-
-  }
-
-  // generate indices (data for element array buffer)
-
-  for ( var i = 0; i < segments; i ++ ) {
-
-    for ( var j = 0; j < segments; j ++ ) {
-
-      var a = i * ( segments + 1 ) + ( j + 1 );
-      var b = i * ( segments + 1 ) + j;
-      var c = ( i + 1 ) * ( segments + 1 ) + j;
-      var d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
-
-      // generate two faces (triangles) per iteration
-
-      indices.push( a, b, d ); // face one
-      indices.push( b, c, d ); // face two
-
-    }
-
-  }
-
-  //
-
-  geometry.setIndex( indices );
-  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-  geometry.computeVertexNormals ();
-
+  var geometry = createBulbGeometry();
 
 
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
@@ -160,14 +89,14 @@ async function init() {
     raycaster.setFromCamera( mouse, camera );
 
     // See if the ray from the camera into the world hits one of our meshes
-    var intersects = raycaster.intersectObject( mesh );
-    console.log(intersects);
-    if(intersects[0])
+    var intersects = raycaster.intersectObject( collisMesh );
+    
+  /*  if(intersects[0])
     {
       helper.position.x = intersects[0].point.x;
       helper.position.y = intersects[0].point.y;
       helper.position.z = intersects[0].point.z;
-    }
+    }*/
   }
   
   function onMouseClick() {
