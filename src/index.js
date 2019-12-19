@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import {GLTFLoader} from './third-party/GLTFLoader'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
 import {createBulbGeometry} from './Bulb'
+import {createTendrilGeometry, createTendrilFromRaycasts} from './Tendril'
 
 var camera;
 var controls;
@@ -57,6 +58,9 @@ async function init() {
   hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
   hemiLight.position.set( 0, 50, 0 );
   scene.add( hemiLight );
+
+  const isectRoot = new THREE.Group();
+  isectRoot.add(collisMesh);
    
   var loader = new THREE.GLTFLoader();
 
@@ -78,20 +82,50 @@ async function init() {
     height:2.0,
   });
 
+  const raycastFunc  = (origin,direction)=>{
+    raycaster.set(origin, direction);
+    var intersects = raycaster.intersectObject( collisMesh );
+    if(intersects.length==0)
+      return null;
 
+    return intersects[0].point;
+  }
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
   //geometry.translate( 0, 50, 0 );
   //geometry.rotateX( Math.PI / 2 );
   const bulbMaterial = new THREE.MeshStandardMaterial();
   bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
-  const helper = new THREE.Mesh( geometry,  bulbMaterial);
-  scene.add( helper );
+  const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
+  scene.add( firstPlant );
 
   if(intersects[0])
   {
-    helper.position.x = intersects[0].point.x;
-    helper.position.y = intersects[0].point.y;
-    helper.position.z = intersects[0].point.z;
+    firstPlant.position.x = intersects[0].point.x;
+    firstPlant.position.y = intersects[0].point.y;
+    firstPlant.position.z = intersects[0].point.z;
+
+    
+
+    for(let i=0;i<5;i++) {
+
+
+      const direc = new THREE.Vector3(Math.random()*2.0-1.0, 0.0, Math.random()*2.0-1.0);
+      direc.normalize();
+
+      
+      const tendrilGeom = createTendrilFromRaycasts(raycastFunc, intersects[0].point,   direc, {
+        maxPoints: 50,
+        radius: 0.25,
+        maxStepDist: 0.5,
+      });
+  
+      const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
+  
+      isectRoot.add(new THREE.Mesh( tendrilGeom, bulbMaterial ));
+      scene.add(tendril);
+  
+    }
+    
   }
 
   const mouse = new THREE.Vector2();
@@ -126,6 +160,30 @@ async function init() {
     newMesh.scale.y = 0.2;
     newMesh.scale.z = 0.2;
     scene.add(newMesh);
+    isectRoot.add(new THREE.Mesh( geometry, bulbMaterial ));
+
+    for(let i=0;i<5;i++) {
+
+
+      const direc = new THREE.Vector3(Math.random()*2.0-1.0, 0.0, Math.random()*2.0-1.0);
+      direc.normalize();
+
+      
+      const tendrilGeom = createTendrilFromRaycasts(raycastFunc, currentPosition,   direc, {
+        maxPoints: 50,
+        radius: 0.05,
+        height: 0.01,
+        maxStepDist: 0.5,
+      });
+  
+      const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
+  
+      isectRoot.add(new THREE.Mesh( tendrilGeom, bulbMaterial ));
+      scene.add(tendril);
+  
+    }
+    
+
   }
   
   canvas.addEventListener( 'mousemove', onMouseMove, false );

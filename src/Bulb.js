@@ -24,7 +24,7 @@ export function createBulbGeometry(options) {
 
   for ( var i = 0; i <= segments; i ++ ) {
 
-
+    const ro = Math.random();
     for ( var j = 0; j <= segments; j ++ ) {
 
 
@@ -58,6 +58,7 @@ export function createBulbGeometry(options) {
       else if(v<=baseHeight) {
         const bp = 1.0-v/baseHeight;
         let b = bp*bp*baseRadius;
+        b+= b*0.25*ro;
         d = Math.max(b,stemRadius);
 
       }
