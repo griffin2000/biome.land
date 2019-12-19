@@ -5,6 +5,7 @@ import {createBulbGeometry} from './Bulb'
 
 var camera;
 var controls;
+var currentPosition;
 
 function loadGLTF(filename) {
   return new Promise((resolve,reject)=>{
@@ -90,21 +91,17 @@ async function init() {
 
     // See if the ray from the camera into the world hits one of our meshes
     var intersects = raycaster.intersectObject( collisMesh );
-    
-  /*  if(intersects[0])
+
+    if(intersects[0])
     {
-      helper.position.x = intersects[0].point.x;
-      helper.position.y = intersects[0].point.y;
-      helper.position.z = intersects[0].point.z;
-    }*/
+      currentPosition = new THREE.Vector3(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z) 
+    }
   }
   
   function onMouseClick() {
     console.log('mesh')
     const newMesh = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() )
-    newMesh.position.x = helper.position.x;
-    newMesh.position.y = helper.position.y;
-    newMesh.position.z = helper.position.z;
+    newMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z)
     scene.add(newMesh);
   }
   
