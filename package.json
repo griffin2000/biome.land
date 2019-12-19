@@ -1,0 +1,17 @@
+{
+  "name": "biome.land",
+  "version": "1.0.0",
+  "description": "biome.land Game Jam prototype",
+  "main": "src/index.js",
+  "dependencies": {
+    "three": "^0.111.0",
+    "webpack": "^4.31.0"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^5.0.3",
+    "webpack-cli": "^3.3.7"
+  },
+  "scripts": {},
+  "author": "",
+  "license": "MIT"
+}
