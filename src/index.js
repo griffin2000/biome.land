@@ -1,6 +1,7 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
 import {GLTFLoader} from './third-party/GLTFLoader'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
+import {createBulbGeometry} from './Bulb'
 
 var camera;
 var controls;
@@ -12,7 +13,7 @@ function loadGLTF(filename) {
     loader.load( 
      filename, 
     function ( gltf ) {
-      console.log("GLTF loaded");
+      
   
       resolve(gltf)
     }, 
@@ -59,87 +60,11 @@ async function init() {
   scene.add(mesh);
 
   var intersects = raycaster.intersectObject( collisMesh );
-  console.log(intersects);
   const render = () =>{
     renderer.render(scene, camera);
   }
 
-  var geometry = new THREE.BufferGeometry();
-
-  var indices = [];
-
-  var vertices = [];
-  var normals = [];
-  var colors = [];
-
-  var size = 1;
-  var segments = 10;
-
-  var halfSize = size / 2;
-  var segmentSize = size / segments;
-  var uIncr = 1.0/(segments-1);
-  var vIncr = 1.0/(segments-1);
-
-  const height = 1.0;
-  const radius = 0.5;
-
-  // generate vertices, normals and color data for a simple grid geometry
-
-  for ( var i = 0; i <= segments; i ++ ) {
-
-
-    for ( var j = 0; j <= segments; j ++ ) {
-
-
-      const u = i*uIncr;
-      const v = j*vIncr;
-      const phi = u*Math.PI*2.0;
-
-      //const d = 
-      const x = -radius*Math.cos(phi);
-      const z = radius*Math.sin(phi);
-      const y = v * height;
-
-      vertices.push( x, y, z );
-      normals.push( 0, 0, 1 );
-
-      var r = ( x / size ) + 0.5;
-      var g = ( y / size ) + 0.5;
-
-      colors.push( r, g, 1 );
-
-    }
-
-  }
-
-  // generate indices (data for element array buffer)
-
-  for ( var i = 0; i < segments; i ++ ) {
-
-    for ( var j = 0; j < segments; j ++ ) {
-
-      var a = i * ( segments + 1 ) + ( j + 1 );
-      var b = i * ( segments + 1 ) + j;
-      var c = ( i + 1 ) * ( segments + 1 ) + j;
-      var d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
-
-      // generate two faces (triangles) per iteration
-
-      indices.push( a, b, d ); // face one
-      indices.push( b, c, d ); // face two
-
-    }
-
-  }
-
-  //
-
-  geometry.setIndex( indices );
-  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-  geometry.computeVertexNormals ();
-
+  var geometry = createBulbGeometry();
 
 
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
@@ -165,13 +90,13 @@ async function init() {
 
     // See if the ray from the camera into the world hits one of our meshes
     var intersects = raycaster.intersectObject( collisMesh );
-    console.log(intersects);
-    if(intersects[0])
+    
+  /*  if(intersects[0])
     {
       helper.position.x = intersects[0].point.x;
       helper.position.y = intersects[0].point.y;
       helper.position.z = intersects[0].point.z;
-    }
+    }*/
   }
   
   canvas.addEventListener( 'mousemove', onMouseMove, false );
