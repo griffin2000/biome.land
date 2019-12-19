@@ -1,6 +1,9 @@
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
 import {GLTFLoader} from './third-party/GLTFLoader'
 
+var camera;
+var controls;
 
 function loadGLTF(filename) {
   return new Promise((resolve,reject)=>{
@@ -28,10 +31,10 @@ async function init() {
     antialias: true,
     canvas 
   } );
-  const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 80000 );
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 80000 );
 
-  camera.position.y = 4;
-  camera.lookAt(new THREE.Vector3(0,0,-10));
+  camera.position.set(-7, 0, -21);
+  controls = new OrbitControls( camera, renderer.domElement );
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color( 0xAAAAAA );
@@ -178,6 +181,12 @@ async function init() {
   console.log("init");
 }
 
+function animate() {
+  requestAnimationFrame( animate );
+  controls.update();
+}
+
 init().then(()=>{
   console.log("App inited");
+  animate()
 });
