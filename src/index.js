@@ -170,12 +170,22 @@ async function init() {
     }
   }
   
+  function onMouseClick() {
+    console.log('mesh')
+    const newMesh = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() )
+    newMesh.position.x = helper.position.x;
+    newMesh.position.y = helper.position.y;
+    newMesh.position.z = helper.position.z;
+    scene.add(newMesh);
+  }
+  
   canvas.addEventListener( 'mousemove', onMouseMove, false );
-
+  canvas.addEventListener("click", onMouseClick);
   renderer.setAnimationLoop( render );
 
   console.log("init");
 }
+
 
 function animate() {
   requestAnimationFrame( animate );
