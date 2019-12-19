@@ -48,12 +48,14 @@ async function init() {
    
   var loader = new THREE.GLTFLoader();
 
+  const collisGltf = await loadGLTF('assets/map_139586444_densified_gltf/map_139586444_densified_mesh_textured_lod2.gltf');
+  var collisMesh = collisGltf.scene.children[ 0 ];
   const gltf = await loadGLTF('assets/map_139586444_densified_gltf/map_139586444_densified_mesh_textured_lod0z.gltf');
 
   var mesh = gltf.scene.children[ 0 ];
   scene.add(mesh);
 
-  var intersects = raycaster.intersectObject( mesh );
+  var intersects = raycaster.intersectObject( collisMesh );
   console.log(intersects);
   const render = () =>{
     renderer.render(scene, camera);
@@ -89,6 +91,8 @@ async function init() {
       const u = i*uIncr;
       const v = j*vIncr;
       const phi = u*Math.PI*2.0;
+
+      //const d = 
       const x = -radius*Math.cos(phi);
       const z = radius*Math.sin(phi);
       const y = v * height;
@@ -157,7 +161,7 @@ async function init() {
     raycaster.setFromCamera( mouse, camera );
 
     // See if the ray from the camera into the world hits one of our meshes
-    var intersects = raycaster.intersectObject( mesh );
+    var intersects = raycaster.intersectObject( collisMesh );
     console.log(intersects);
     if(intersects[0])
     {
