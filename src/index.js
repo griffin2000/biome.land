@@ -14,6 +14,7 @@ let currentObject = null;
 let rayVisTime = 0.0
 var renderer
 var scene;
+var score = 0;
 
 var moveForward = false;
 var moveBackward = false;
@@ -151,6 +152,7 @@ async function init() {
   };
   document.addEventListener( 'keydown', onKeyDown, false );
   document.addEventListener( 'keyup', onKeyUp, false );
+  var scoreField = document.getElementById('score');
 
 
   renderer = new THREE.WebGLRenderer();
@@ -330,7 +332,10 @@ async function init() {
 
     if(currentObject) {
       const root = currentObject.userData.root;
+      score++;
+      scoreField.innerHTML = score;
 
+      
       isectRoot.remove(root);
       scene.remove(root.userData.visMesh);
       for(let i=0;i<root.userData.children.length;i++) {
@@ -343,7 +348,7 @@ async function init() {
   }
   document.addEventListener( 'pointerlockchange', pointerlockchange, false );
   window.addEventListener('mousemove', onMouseMove, false );
-  //window.addEventListener("click", onMouseClick);
+  window.addEventListener("click", onMouseClick);
   // var canvas = document.getElementById('ui-canvas');
   // var context = canvas.getContext( '2d' );
   // context.clearRect(0, 0, window.width, window.height);
