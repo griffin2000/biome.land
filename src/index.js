@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js'; 
+import {GLTFLoader} from './third-party/GLTFLoader'
 import {createBulbGeometry} from './Bulb'
 import { LoadingManager } from 'three';
 import {createTendrilGeometry, createTendrilFromRaycasts} from './Tendril'
@@ -76,7 +77,7 @@ async function init() {
 
   camera.position.set(-7, 0, -21);
   var canvas = document.getElementById('ui-canvas');
- // var context = canvas.getContext( '2d' );  
+  var context = canvas.getContext( '2d' );  
 
   controls = new FirstPersonControls(camera);
   const scene = new THREE.Scene()
@@ -128,8 +129,8 @@ async function init() {
 
   const bulbMaterial = new THREE.MeshStandardMaterial();
   bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
-  const helper = new THREE.Mesh( geometry,  bulbMaterial);
-  scene.add( helper )
+  const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
+  scene.add( firstPlant )
   
 
   const raycastFunc  = (origin,direction)=>{
@@ -140,13 +141,6 @@ async function init() {
 
     return intersects[0];
   }
-  //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
-  //geometry.translate( 0, 50, 0 );
-  //geometry.rotateX( Math.PI / 2 );
-  const bulbMaterial = new THREE.MeshStandardMaterial();
-  bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
-  const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
-  scene.add( firstPlant );
 
   isectRoot.add(createCollisMesh(firstPlant,"Plant"));
 
@@ -253,8 +247,8 @@ async function init() {
   // var context = canvas.getContext( '2d' );
   // context.clearRect(0, 0, window.width, window.height);
   // context.fillRect(0, 0, 1000,1000);
-  // canvas.width = window.innerWidth;
-  // canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   renderer.setAnimationLoop( render );
 
   console.log("init");
