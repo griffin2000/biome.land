@@ -194,7 +194,7 @@ async function init() {
       const tendrilGeom = createTendrilFromRaycasts(raycastFunc, currentPosition,   direc, {
         maxPoints: 50,
         radius: 0.03 + s*0.06,
-        height: 0.01 + s*0.05,
+        height: 0.01 + s*0.1,
         maxStepDist: 0.5,
       });
   
