@@ -1,10 +1,9 @@
 import * as THREE from 'three'
+import { Vector4 } from 'three';
 
-export function createBulbGeometry(options) {
-
+export function setBulbGeometry(geometry, options) {
   options = options || {};
 
-  var geometry = new THREE.BufferGeometry();
 
   var size = 1;
   var segments = options.segments || 30;
@@ -35,21 +34,11 @@ export function createBulbGeometry(options) {
   const nv = (segments+1)*(segments+1);
   const ni = 6*segments*segments;
 
-  var indices = [];
 
-  var vertices = [];
-  var normals = [];
-  var colors = [];
+  const vertices =geometry.attributes.position.array;//new Float32Array(nv*3);
+  const normals = geometry.attributes.normal.array;//new Float32Array(nv*3);
+  const indices =  geometry.index.array;
   
-/*
-  const indices = new Uint16Array(ni);
-  const vertices = new Float32Array(nv*3);
-  const normals = new Float32Array(nv*3);
-  geometry.setIndex( indices );
-  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-*/
-
   
   for ( var i = 0; i <= segments; i ++ ) {
 
@@ -106,22 +95,37 @@ export function createBulbGeometry(options) {
 
       const vidx = i*(segments+1) + j;
 
-      /*      vertices[vidx*3+0] = x;
+      vertices[vidx*3+0] = x;
       vertices[vidx*3+1] = y;
       vertices[vidx*3+2] = z;
-*/
 
-      vertices.push( x, y, z );
-      normals.push( 0, 0, 1 );
-
-      var r = ( x / size ) + 0.5;
-      var g = ( y / size ) + 0.5;
-
-      colors.push( r, g, 1 );
 
     }
 
   }
+
+  geometry.computeVertexNormals ();
+
+}
+
+export function createBulbGeometry(options) {
+
+  options = options || {};
+
+  var geometry = new THREE.BufferGeometry();
+
+  var segments = options.segments || 30;
+
+  const nv = (segments+1)*(segments+1);
+  const ni = 6*segments*segments;
+
+  
+  geometry.index = new THREE.Uint16BufferAttribute( ni, 1 );
+  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( nv*3, 3 ) );
+  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( nv*3, 3 ) );
+
+  const indices =  geometry.index.array;
+  
 
   // generate indices (data for element array buffer)
 
@@ -133,31 +137,20 @@ export function createBulbGeometry(options) {
       var b = i * ( segments + 1 ) + j;
       var c = ( i + 1 ) * ( segments + 1 ) + j;
       var d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
-
-      // generate two faces (triangles) per iteration
-
-      indices.push( a, b, d ); // face one
-      indices.push( b, c, d ); // face two
-      
+ 
       const idx = i*segments + j;
-      /*indices[idx*6 +0] =a;
+      indices[idx*6 +0] =a;
       indices[idx*6 +1] =b;
       indices[idx*6 +2] =d;
       indices[idx*6 +3] =b;
       indices[idx*6 +4] =c;
       indices[idx*6 +5] =d;
-*/
+
     }
 
   }
 
-  //
-
-  geometry.setIndex( indices );
-  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-  geometry.computeVertexNormals ();
+  setBulbGeometry(geometry, options);
 
   return geometry;
 
