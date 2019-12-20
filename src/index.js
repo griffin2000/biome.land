@@ -343,7 +343,7 @@ async function init() {
   }
   document.addEventListener( 'pointerlockchange', pointerlockchange, false );
   window.addEventListener('mousemove', onMouseMove, false );
-  //window.addEventListener("click", onMouseClick);
+  window.addEventListener("click", onMouseClick);
   // var canvas = document.getElementById('ui-canvas');
   // var context = canvas.getContext( '2d' );
   // context.clearRect(0, 0, window.width, window.height);
