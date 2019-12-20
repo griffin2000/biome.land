@@ -28,6 +28,19 @@ function loadGLTF(filename) {
   )
   });
 }
+
+function createCollisMesh (visMesh, tag) {
+  const mesh = new THREE.Mesh(visMesh.geometry,visMesh.material);
+  mesh.position.copy(visMesh.position);
+  mesh.scale.copy(visMesh.scale);
+  mesh.quaternion.copy(visMesh.quaternion);
+  
+  tag = tag || "";
+  mesh.userData = {
+    tag,
+  };
+  return mesh;
+}
 async function init() {
   const canvas = document.getElementById('canvas');
   const renderer = new THREE.WebGLRenderer( { 
@@ -60,13 +73,14 @@ async function init() {
   scene.add( hemiLight );
 
   const isectRoot = new THREE.Group();
-  isectRoot.add(collisMesh);
    
   var loader = new THREE.GLTFLoader();
 
   const collisGltf = await loadGLTF('assets/map_139586444_densified_gltf/map_139586444_densified_mesh_textured_lod2.gltf');
   var collisMesh = collisGltf.scene.children[ 0 ];
   const gltf = await loadGLTF('assets/map_139586444_densified_gltf/map_139586444_densified_mesh_textured_lod0z.gltf');
+
+  isectRoot.add(collisMesh);
 
   var mesh = gltf.scene.children[ 0 ];
   scene.add(mesh);
@@ -84,11 +98,11 @@ async function init() {
 
   const raycastFunc  = (origin,direction)=>{
     raycaster.set(origin, direction);
-    var intersects = raycaster.intersectObject( collisMesh );
+    var intersects = raycaster.intersectObject( isectRoot , true);
     if(intersects.length==0)
       return null;
 
-    return intersects[0].point;
+    return intersects[0];
   }
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
   //geometry.translate( 0, 50, 0 );
@@ -97,6 +111,8 @@ async function init() {
   bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
   const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
   scene.add( firstPlant );
+
+  isectRoot.add(createCollisMesh(firstPlant,"Plant"));
 
   if(intersects[0])
   {
@@ -116,12 +132,12 @@ async function init() {
       const tendrilGeom = createTendrilFromRaycasts(raycastFunc, intersects[0].point,   direc, {
         maxPoints: 50,
         radius: 0.25,
-        maxStepDist: 0.5,
+        maxStepDist: 0.1,
       });
   
       const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
   
-      isectRoot.add(new THREE.Mesh( tendrilGeom, bulbMaterial ));
+      isectRoot.add(createCollisMesh(tendril,"Plant"));
       scene.add(tendril);
   
     }
@@ -143,15 +159,21 @@ async function init() {
     {
       currentPosition = new THREE.Vector3(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z) 
     }
+    else currentPosition = null;
   }
   
   function onMouseClick() {
     console.log('mesh')
 
+    if(!currentPosition)
+      return;
+
+    const s = Math.random();
+
     var geometry = createBulbGeometry({
-      stemRadius:0.05 + Math.random()*0.02,
-      buldRadius: 0.2 + Math.random()*0.05,
-      height:2.0+Math.random(),
+      stemRadius:0.05 + s*0.05,
+      buldRadius: 0.2 + s*0.1,
+      height:2.0+2.0*s,
     });
 
     const newMesh = new THREE.Mesh( geometry, bulbMaterial )
@@ -160,8 +182,8 @@ async function init() {
     newMesh.scale.y = 0.2;
     newMesh.scale.z = 0.2;
     scene.add(newMesh);
-    isectRoot.add(new THREE.Mesh( geometry, bulbMaterial ));
-
+    const collisMeshes = [];
+    collisMeshes.push(createCollisMesh(newMesh,"Plant"))
     for(let i=0;i<5;i++) {
 
 
@@ -171,18 +193,19 @@ async function init() {
       
       const tendrilGeom = createTendrilFromRaycasts(raycastFunc, currentPosition,   direc, {
         maxPoints: 50,
-        radius: 0.05,
-        height: 0.01,
+        radius: 0.03 + s*0.06,
+        height: 0.01 + s*0.05,
         maxStepDist: 0.5,
       });
   
       const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
   
-      isectRoot.add(new THREE.Mesh( tendrilGeom, bulbMaterial ));
+      collisMeshes.push(createCollisMesh(tendril,"Plant"));
       scene.add(tendril);
   
     }
-    
+    for(let i=0;i<collisMesh.length;i++)
+      isectRoot.add(collisMeshes[i]);
 
   }
   

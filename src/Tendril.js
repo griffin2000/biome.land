@@ -169,12 +169,18 @@ export function createTendrilFromRaycasts( raycastFunc, startPoint, direction, o
         if(!rayCastRes) 
             break;
 
-        const rayDist = rayCastRes.distanceTo(pnt);
+        if(rayCastRes.object && rayCastRes.object.userData && rayCastRes.object.userData.tag==="Plant")
+            break;
+            
+        const castPoint = rayCastRes.point;
+
+
+        const rayDist = castPoint.distanceTo(pnt);
         if(rayDist>distThresh)
             break;
 
         const nextPoint =new THREE.Vector3();
-        nextPoint.copy(rayCastRes);
+        nextPoint.copy(castPoint);
         points.push(nextPoint);
 
     }
