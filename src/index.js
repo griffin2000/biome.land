@@ -178,7 +178,7 @@ async function init() {
   const light = new THREE.DirectionalLight( 0xFFFFFF, 3.0 );
   scene.add(light);
   light.target.position.y = -10;
-  light.target.position.z = +5;
+  light.target.position.z = -5;
   scene.add( light.target );
 
   const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
