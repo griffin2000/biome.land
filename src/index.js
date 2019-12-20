@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js'; 
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'; 
 import {GLTFLoader} from './third-party/GLTFLoader'
 import {createBulbGeometry} from './Bulb'
 import { LoadingManager } from 'three';
@@ -12,6 +12,16 @@ var currentPosition;
 var crosshair;
 let currentObject = null;
 let rayVisTime = 0.0
+var renderer
+var scene;
+
+var moveForward = false;
+var moveBackward = false;
+var moveLeft = false;
+var moveRight = false;
+var prevTime = 0;
+var velocity = new THREE.Vector3(0,0,0);
+
 
 function loadGLTF(filename) {
   return new Promise((resolve,reject)=>{
@@ -66,36 +76,97 @@ function CatmullRom( t, p0, p1, p2, p3 ) {
 
 }
 async function init() {
-  const renderer = new THREE.WebGLRenderer();
+
+  var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+  if ( havePointerLock ) {
+    var element = document.body;
+    var pointerlockchange = function ( event ) {
+      if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
+        controlsEnabled = true;
+        controls.enabled = true;
+        blocker.style.display = 'none';
+      } else {
+        controls.enabled = false;
+        blocker.style.display = '-webkit-box';
+        blocker.style.display = '-moz-box';
+        blocker.style.display = 'box';
+      }
+    };
+    var pointerlockerror = function ( event ) {
+      instructions.style.display = '';
+    };
+    // Hook pointer lock state change events
+    document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+    document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+    document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+    document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+    document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+    document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+  }
+
+  var onKeyDown = function ( event ) {
+    switch ( event.keyCode ) {
+      case 38: // up
+      case 87: // w
+        moveForward = true;
+        break;
+      case 37: // left
+      case 65: // a
+        moveLeft = true; 
+        break;
+      case 40: // down
+      case 83: // s
+        moveBackward = true;
+        break;
+      case 39: // right
+      case 68: // d
+        moveRight = true;
+        break;
+      case 32: // space
+        if ( canJump === true ) velocity.y += 350;
+        canJump = false;
+        break;
+    }
+  };
+  var onKeyUp = function ( event ) {
+    switch( event.keyCode ) {
+      case 38: // up
+      case 87: // w
+        console.log('hi')
+        moveForward = false;
+        break;
+      case 37: // left
+      case 65: // a
+        moveLeft = false;
+        break;
+      case 40: // down
+      case 83: // s
+        moveBackward = false;
+        break;
+      case 39: // right
+      case 68: // d
+        moveRight = false;
+        break;
+    }
+  };
+  document.addEventListener( 'keydown', onKeyDown, false );
+  document.addEventListener( 'keyup', onKeyUp, false );
+
+
+  renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.getElementById('game').appendChild(renderer.domElement)
 
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 80000 );
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
   camera.position.set(-7, 0, -21);
   var canvas = document.getElementById('ui-canvas');
   var context = canvas.getContext( '2d' );  
 
-  controls = new FirstPersonControls(camera);
-  const scene = new THREE.Scene()
-
+  controls = new PointerLockControls(camera, document.getElementById('game'));
+  scene = new THREE.Scene()
   
-  var cameraPosSpline = [
-    new THREE.Vector3( -8, 1, -25 ),
-    new THREE.Vector3( -8, 1, - 30 ),
-    new THREE.Vector3( -8, 1, 20 ),
-     new THREE.Vector3( -8, 1, -25),
-  ] ;
-
-  var cameraTargetSpline = [
-    new THREE.Vector3( 7,0,-10 ),
-    new THREE.Vector3( 7,0,-10),
-    new THREE.Vector3( 15,0,-10),
-     new THREE.Vector3(0,0,-10 ),
-  ] ;
-
-  //var player = controls.getObject();
-  //scene.add(player);
+  scene.add(controls.getObject());
 
   scene.background = new THREE.Color( 0xAAAAAA );
 
@@ -191,16 +262,6 @@ async function init() {
       t = 1.0 -t;
     }
 
-    cameraPos.x = CatmullRom(t, cameraPosSpline[0].x,cameraPosSpline[1].x,cameraPosSpline[2].x,cameraPosSpline[3].x, );
-    cameraPos.y = CatmullRom(t, cameraPosSpline[0].y,cameraPosSpline[1].y,cameraPosSpline[2].y,cameraPosSpline[3].y, );
-    cameraPos.z = CatmullRom(t, cameraPosSpline[0].z,cameraPosSpline[1].z,cameraPosSpline[2].z,cameraPosSpline[3].z, );
-
-    cameraTarget.x = CatmullRom(t, cameraTargetSpline[0].x,cameraTargetSpline[1].x,cameraTargetSpline[2].x,cameraTargetSpline[3].x, );
-    cameraTarget.y = CatmullRom(t, cameraTargetSpline[0].y,cameraTargetSpline[1].y,cameraTargetSpline[2].y,cameraTargetSpline[3].y, );
-    cameraTarget.z = CatmullRom(t, cameraTargetSpline[0].z,cameraTargetSpline[1].z,cameraTargetSpline[2].z,cameraTargetSpline[3].z, );
-
-    camera.position.copy(cameraPos);
-    camera.lookAt(cameraTarget);
 
     if(currTime>rayVisTime)
       {
@@ -280,18 +341,28 @@ async function init() {
       }
     }
   }
-  
-  window.addEventListener('mousemove', onMouseMove, false );
-  window.addEventListener("click", onMouseClick);
+  document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+  //window.addEventListener('mousemove', onMouseMove, false );
+  //window.addEventListener("click", onMouseClick);
   // var canvas = document.getElementById('ui-canvas');
   // var context = canvas.getContext( '2d' );
   // context.clearRect(0, 0, window.width, window.height);
   // context.fillRect(0, 0, 1000,1000);
+
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   renderer.setAnimationLoop( render );
 
   console.log("init");
+
+  window.addEventListener( 'resize', onWindowResize, false );
+
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 const cameraPos = new THREE.Vector3();
@@ -301,7 +372,26 @@ function animate() {
 
 
   requestAnimationFrame( animate );
+
+  var time = performance.now();
+  var delta = ( time - prevTime ) / 1000;
+  console.log(delta)
+
+  velocity.x -= velocity.x * 1.0 * delta;
+  velocity.z -= velocity.z * 1.0 * delta;
+  console.log(velocity)
+
+  if ( moveForward ) velocity.z -= 5.0 * delta;
+  if ( moveBackward ) velocity.z += 5.0 * delta;
+  if ( moveLeft ) velocity.x -= 5.0 * delta;
+  if ( moveRight ) velocity.x += 5.0 * delta;
+
+  controls.getObject().translateX( velocity.x * delta );
+  controls.getObject().translateZ( velocity.z * delta );
+
   //controls.update();
+  renderer.render( scene, camera );
+	prevTime = time;
 }
 
 init().then(()=>{
