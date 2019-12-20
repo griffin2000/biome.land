@@ -1,16 +1,9 @@
 import * as THREE from 'three'
+import { Vector4 } from 'three';
 
-export function createBulbGeometry(options) {
-
+export function setBulbGeometry(geometry, options) {
   options = options || {};
 
-  var geometry = new THREE.BufferGeometry();
-
-  var indices = [];
-
-  var vertices = [];
-  var normals = [];
-  var colors = [];
 
   var size = 1;
   var segments = options.segments || 30;
@@ -22,9 +15,34 @@ export function createBulbGeometry(options) {
 
   // generate vertices, normals and color data for a simple grid geometry
 
+  const offsets = [];
+  //new THREE.Vector3();
+
+  const offsetNoiseMag = options.noiseMag || 0.01;
+  for ( var j = 0; j <= segments; j ++ ) {
+    const v = j*vIncr;
+    
+    offsets.push(new THREE.Vector3(
+      offsetNoiseMag*(Math.random()-0.5),
+      0.0,
+      offsetNoiseMag*(Math.random()-0.5),
+    ));
+
+
+  }
+
+  const nv = (segments+1)*(segments+1);
+  const ni = 6*segments*segments;
+
+
+  const vertices =geometry.attributes.position.array;//new Float32Array(nv*3);
+  const normals = geometry.attributes.normal.array;//new Float32Array(nv*3);
+  const indices =  geometry.index.array;
+  
+  
   for ( var i = 0; i <= segments; i ++ ) {
 
-
+    const ro = Math.random();
     for ( var j = 0; j <= segments; j ++ ) {
 
 
@@ -41,6 +59,10 @@ export function createBulbGeometry(options) {
       const baseHeight = options.baseHeight || 0.1;
       const baseRadius= options.baseRadius || 0.4;
 
+      const noiseMag = options.noiseMag || 0.02;
+      let ox = 0.0;
+      let oz = 0.0;
+
       if(v>bulbStart) {
         let dp = (v -bulbStart)/bulbHeight;
         dp = dp - 0.5;
@@ -56,25 +78,54 @@ export function createBulbGeometry(options) {
       else if(v<=baseHeight) {
         const bp = 1.0-v/baseHeight;
         let b = bp*bp*baseRadius;
+        b+= b*0.25*ro;
         d = Math.max(b,stemRadius);
 
+      } else {
+        ox=offsets[j].x;
+        oz=offsets[j].z;
       }
+      
+      const randOffset = (Math.random() -0.5) * noiseMag;
+      d+=randOffset;
 
-      const x = -d*Math.cos(phi);
-      const z = d*Math.sin(phi);
+      const x = -d*Math.cos(phi) + ox;
+      const z = d*Math.sin(phi) + oz;
       const y = v * height;
 
-      vertices.push( x, y, z );
-      normals.push( 0, 0, 1 );
+      const vidx = i*(segments+1) + j;
 
-      var r = ( x / size ) + 0.5;
-      var g = ( y / size ) + 0.5;
+      vertices[vidx*3+0] = x;
+      vertices[vidx*3+1] = y;
+      vertices[vidx*3+2] = z;
 
-      colors.push( r, g, 1 );
 
     }
 
   }
+
+  geometry.computeVertexNormals ();
+
+}
+
+export function createBulbGeometry(options) {
+
+  options = options || {};
+
+  var geometry = new THREE.BufferGeometry();
+
+  var segments = options.segments || 30;
+
+  const nv = (segments+1)*(segments+1);
+  const ni = 6*segments*segments;
+
+  
+  geometry.index = new THREE.Uint16BufferAttribute( ni, 1 );
+  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( nv*3, 3 ) );
+  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( nv*3, 3 ) );
+
+  const indices =  geometry.index.array;
+  
 
   // generate indices (data for element array buffer)
 
@@ -86,23 +137,20 @@ export function createBulbGeometry(options) {
       var b = i * ( segments + 1 ) + j;
       var c = ( i + 1 ) * ( segments + 1 ) + j;
       var d = ( i + 1 ) * ( segments + 1 ) + ( j + 1 );
-
-      // generate two faces (triangles) per iteration
-
-      indices.push( a, b, d ); // face one
-      indices.push( b, c, d ); // face two
+ 
+      const idx = i*segments + j;
+      indices[idx*6 +0] =a;
+      indices[idx*6 +1] =b;
+      indices[idx*6 +2] =d;
+      indices[idx*6 +3] =b;
+      indices[idx*6 +4] =c;
+      indices[idx*6 +5] =d;
 
     }
 
   }
 
-  //
-
-  geometry.setIndex( indices );
-  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-  geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-  geometry.computeVertexNormals ();
+  setBulbGeometry(geometry, options);
 
   return geometry;
 
