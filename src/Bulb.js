@@ -111,6 +111,10 @@ export function setBulbGeometry(geometry, options) {
   }
 
   geometry.computeVertexNormals ();
+  geometry.attributes.position.needsUpdate = true;
+  geometry.attributes.normal.needsUpdate = true;
+  geometry.computeBoundingSphere () ;
+  geometry.computeBoundingBox () ;
 
 }
 

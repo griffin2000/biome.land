@@ -204,6 +204,7 @@ async function init() {
       color:0xFF0000,
     })
   );
+  ray0.material.depthTest = false;
   const rayRot0 = new THREE.Group();
   ray0.rotation.x=Math.PI*0.5,
   rayRot0.add(ray0);
@@ -224,6 +225,7 @@ async function init() {
 
   scene.add(rayRot1);
 
+  ray1.material.depthTest = false;
   
 
   const raycastFunc  = (origin,direction)=>{
@@ -300,13 +302,11 @@ async function init() {
       currentPosition = new THREE.Vector3(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z) 
     } 
 
-    console.log("client", event.clientX, event.clientY)
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(crosshair, event.clientX - crosshair.width/2, event.clientY - crosshair.height/2)
   }
   
   function onMouseClick() {
-    console.log('mesh')
     const rayDirec = new THREE.Vector3();
 
     mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
@@ -342,8 +342,8 @@ async function init() {
     }
   }
   document.addEventListener( 'pointerlockchange', pointerlockchange, false );
-  //window.addEventListener('mousemove', onMouseMove, false );
-  //window.addEventListener("click", onMouseClick);
+  window.addEventListener('mousemove', onMouseMove, false );
+  window.addEventListener("click", onMouseClick);
   // var canvas = document.getElementById('ui-canvas');
   // var context = canvas.getContext( '2d' );
   // context.clearRect(0, 0, window.width, window.height);
@@ -353,7 +353,6 @@ async function init() {
   canvas.height = window.innerHeight;
   renderer.setAnimationLoop( render );
 
-  console.log("init");
 
   window.addEventListener( 'resize', onWindowResize, false );
 
@@ -375,11 +374,8 @@ function animate() {
 
   var time = performance.now();
   var delta = ( time - prevTime ) / 1000;
-  console.log(delta)
-
   velocity.x -= velocity.x * 1.0 * delta;
   velocity.z -= velocity.z * 1.0 * delta;
-  console.log(velocity)
 
   if ( moveForward ) velocity.z -= 5.0 * delta;
   if ( moveBackward ) velocity.z += 5.0 * delta;
