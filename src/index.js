@@ -1,13 +1,15 @@
 import * as THREE from 'three'
+import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js'; 
 import {GLTFLoader} from './third-party/GLTFLoader'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
 import {createBulbGeometry} from './Bulb'
+import { LoadingManager } from 'three';
 import {createTendrilGeometry, createTendrilFromRaycasts} from './Tendril'
 import {startCreator} from './PlantCreator'
 
 var camera;
 var controls;
 var currentPosition;
+var crosshair;
 
 function loadGLTF(filename) {
   return new Promise((resolve,reject)=>{
@@ -29,24 +31,63 @@ function loadGLTF(filename) {
   )
   });
 }
+function loadCrosshair() {
+  var loader = new THREE.ImageLoader();
 
+  // load a image resource
+  loader.load(
+    // resource URL
+    'assets/crosshair.png',
+
+    // onLoad callback
+    function ( image ) {
+      // use the image, e.g. draw part of it on a canvas
+      crosshair = image;
+    },
+
+    // onProgress callback currently not supported
+    undefined,
+
+    // onError callback
+    function () {
+      console.error( 'An error happened.' );
+    }
+  );
+}
+
+function createCollisMesh (visMesh, tag) {
+  const mesh = new THREE.Mesh(visMesh.geometry,visMesh.material);
+  mesh.position.copy(visMesh.position);
+  mesh.scale.copy(visMesh.scale);
+  mesh.quaternion.copy(visMesh.quaternion);
+  
+  tag = tag || "";
+  mesh.userData = {
+    tag,
+  };
+  return mesh;
+}
 async function init() {
-  const canvas = document.getElementById('canvas');
-  const renderer = new THREE.WebGLRenderer( { 
-    antialias: true,
-    canvas 
-  } );
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.getElementById('game').appendChild(renderer.domElement)
+
   camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 80000 );
 
   camera.position.set(-7, 0, -21);
-  controls = new OrbitControls( camera, renderer.domElement );
+  var canvas = document.getElementById('ui-canvas');
+  var context = canvas.getContext( '2d' );  
 
-  const scene = new THREE.Scene();
+  controls = new FirstPersonControls(camera);
+  const scene = new THREE.Scene()
+  
+  //var player = controls.getObject();
+  //scene.add(player);
+
   scene.background = new THREE.Color( 0xAAAAAA );
 
   const raycaster = new THREE.Raycaster();
   // See if the ray from the camera into the world hits one of our meshes
-
 
   const light = new THREE.DirectionalLight( 0xFFFFFF, 3.0 );
   scene.add(light);
@@ -74,6 +115,7 @@ async function init() {
   scene.add(mesh);
 
 
+  
 
   const raycastFunc  = (origin,direction)=>{
     raycaster.set(origin, direction);
@@ -102,7 +144,7 @@ async function init() {
   //geometry.rotateX( Math.PI / 2 );
   startCreator(raycastWorldFunc, raycastFunc, scene, isectRoot);
 
-  
+      
 
   const mouse = new THREE.Vector2();
 
@@ -119,7 +161,9 @@ async function init() {
     {
       currentPosition = new THREE.Vector3(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z) 
     }
-    else currentPosition = null;
+    console.log("client", event.clientX, event.clientY)
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(crosshair, event.clientX - crosshair.width/2, event.clientY - crosshair.height/2)
   }
   
   function onMouseClick() {
@@ -170,8 +214,14 @@ async function init() {
 
   }
   
-  canvas.addEventListener( 'mousemove', onMouseMove, false );
-  canvas.addEventListener("click", onMouseClick);
+  window.addEventListener('mousemove', onMouseMove, false );
+  window.addEventListener("click", onMouseClick);
+  // var canvas = document.getElementById('ui-canvas');
+  // var context = canvas.getContext( '2d' );
+  // context.clearRect(0, 0, window.width, window.height);
+  // context.fillRect(0, 0, 1000,1000);
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   renderer.setAnimationLoop( render );
 
   console.log("init");
@@ -180,10 +230,11 @@ async function init() {
 
 function animate() {
   requestAnimationFrame( animate );
-  controls.update();
+  //controls.update();
 }
 
 init().then(()=>{
   console.log("App inited");
+  loadCrosshair();
   animate()
-});
+});;
