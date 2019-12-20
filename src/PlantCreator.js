@@ -124,7 +124,7 @@ let currPos = new THREE.Vector3();
 
         }
         else {
-            nextCreation=currTime+Math.random()*500;
+            nextCreation=currTime+Math.random()*200;
         }
 
                 
@@ -132,7 +132,7 @@ let currPos = new THREE.Vector3();
         
        } else {
 
-            const animTime = 1.0;
+            const animTime = 0.5;
             if(creationTime<animTime) {
                 const s = creationTime/animTime;
                 console.log(s);
@@ -164,7 +164,7 @@ let currPos = new THREE.Vector3();
                     bend,
                 })
 
-                nextCreation=currTime+Math.random()*1000;
+                nextCreation=currTime+Math.random()*500;
                 currGeom = null;
             }
        }
