@@ -6,12 +6,6 @@ export function createBulbGeometry(options) {
 
   var geometry = new THREE.BufferGeometry();
 
-  var indices = [];
-
-  var vertices = [];
-  var normals = [];
-  var colors = [];
-
   var size = 1;
   var segments = options.segments || 30;
 
@@ -22,6 +16,41 @@ export function createBulbGeometry(options) {
 
   // generate vertices, normals and color data for a simple grid geometry
 
+  const offsets = [];
+  //new THREE.Vector3();
+
+  const offsetNoiseMag = options.noiseMag || 0.01;
+  for ( var j = 0; j <= segments; j ++ ) {
+    const v = j*vIncr;
+    
+    offsets.push(new THREE.Vector3(
+      offsetNoiseMag*(Math.random()-0.5),
+      0.0,
+      offsetNoiseMag*(Math.random()-0.5),
+    ));
+
+
+  }
+
+  const nv = (segments+1)*(segments+1);
+  const ni = 6*segments*segments;
+
+  var indices = [];
+
+  var vertices = [];
+  var normals = [];
+  var colors = [];
+  
+/*
+  const indices = new Uint16Array(ni);
+  const vertices = new Float32Array(nv*3);
+  const normals = new Float32Array(nv*3);
+  geometry.setIndex( indices );
+  geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+  geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+*/
+
+  
   for ( var i = 0; i <= segments; i ++ ) {
 
     const ro = Math.random();
@@ -42,6 +71,8 @@ export function createBulbGeometry(options) {
       const baseRadius= options.baseRadius || 0.4;
 
       const noiseMag = options.noiseMag || 0.02;
+      let ox = 0.0;
+      let oz = 0.0;
 
       if(v>bulbStart) {
         let dp = (v -bulbStart)/bulbHeight;
@@ -61,13 +92,24 @@ export function createBulbGeometry(options) {
         b+= b*0.25*ro;
         d = Math.max(b,stemRadius);
 
+      } else {
+        ox=offsets[j].x;
+        oz=offsets[j].z;
       }
+      
       const randOffset = (Math.random() -0.5) * noiseMag;
       d+=randOffset;
 
-      const x = -d*Math.cos(phi);
-      const z = d*Math.sin(phi);
+      const x = -d*Math.cos(phi) + ox;
+      const z = d*Math.sin(phi) + oz;
       const y = v * height;
+
+      const vidx = i*(segments+1) + j;
+
+      /*      vertices[vidx*3+0] = x;
+      vertices[vidx*3+1] = y;
+      vertices[vidx*3+2] = z;
+*/
 
       vertices.push( x, y, z );
       normals.push( 0, 0, 1 );
@@ -96,7 +138,15 @@ export function createBulbGeometry(options) {
 
       indices.push( a, b, d ); // face one
       indices.push( b, c, d ); // face two
-
+      
+      const idx = i*segments + j;
+      /*indices[idx*6 +0] =a;
+      indices[idx*6 +1] =b;
+      indices[idx*6 +2] =d;
+      indices[idx*6 +3] =b;
+      indices[idx*6 +4] =c;
+      indices[idx*6 +5] =d;
+*/
     }
 
   }
