@@ -11,6 +11,7 @@ var controls;
 var currentPosition;
 var crosshair;
 let currentObject = null;
+let rayVisTime = 0.0
 
 function loadGLTF(filename) {
   return new Promise((resolve,reject)=>{
@@ -126,6 +127,31 @@ async function init() {
   var mesh = gltf.scene.children[ 0 ];
   scene.add(mesh);
 
+  const ray0 = new THREE.Mesh(
+    new THREE.CylinderBufferGeometry(0.1,0.1,100),
+    new THREE.MeshBasicMaterial({
+      color:0xFF0000,
+    })
+  );
+  const rayRot0 = new THREE.Group();
+  ray0.rotation.x=Math.PI*0.5,
+  rayRot0.add(ray0);
+
+  scene.add(rayRot0);
+
+
+
+  const ray1 = new THREE.Mesh(
+    new THREE.CylinderBufferGeometry(0.1,0.1,100),
+    new THREE.MeshBasicMaterial({
+      color:0xFF0000,
+    })
+  );
+  const rayRot1 = new THREE.Group();
+  ray1.rotation.x=Math.PI*0.5,
+  rayRot1.add(ray1);
+
+  scene.add(rayRot1);
 
   
 
@@ -151,7 +177,7 @@ async function init() {
   const render = () =>{
     const currTime = new Date().getTime();
 
-    let t = currTime*0.0001;
+    let t = currTime*0.00002;
   
     t = t-Math.floor(t);
   
@@ -175,6 +201,12 @@ async function init() {
 
     camera.position.copy(cameraPos);
     camera.lookAt(cameraTarget);
+
+    if(currTime>rayVisTime)
+      {
+        ray0.visible = false;
+        ray1.visible = false;
+      }
     
     renderer.render(scene, camera);
   }
@@ -214,6 +246,26 @@ async function init() {
   
   function onMouseClick() {
     console.log('mesh')
+    const rayDirec = new THREE.Vector3();
+
+    mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+    rayDirec.set( mouse.x, mouse.y, 0.5 ).unproject( camera ).sub( camera.position ).normalize();
+    rayDirec.multiplyScalar(200.0);
+    rayDirec.add(camera.position);
+    
+    rayRot0.position.copy(camera.position);
+    rayRot0.position.x+=2.0;
+    rayRot0.lookAt(rayDirec);
+
+    rayRot1.position.copy(camera.position);
+    rayRot1.position.x-=2.0;
+    rayRot1.lookAt(rayDirec);
+
+
+    rayVisTime = new Date().getTime()+30;
+    ray0.visible = true;
+    ray1.visible = true;
 
     if(currentObject) {
       const root = currentObject.userData.root;
