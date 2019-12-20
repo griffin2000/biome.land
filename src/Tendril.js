@@ -137,10 +137,10 @@ export function createTendrilFromRaycasts( raycastFunc, startPoint, direction, o
     points.push(firstPoint);
 
     
-    const maxPoints = 10||options.maxPoints;
-    const maxStepDist = 0.25|| options.maxStepDist;
-    const directionVariance = Math.PI*0.3 || options.maxStepDist;
-    const distThresh = 0.25 || options.distThresh;
+    const maxPoints = options.maxPoints|| 10;
+    const maxStepDist =  options.maxStepDis||0.25;
+    const directionVariance =  options.directionVariance || (Math.PI*0.3) ;
+    const distThresh = options.distThresh||0.25 ;
 
     const rotMtx = new THREE.Matrix4();
     const direc = new THREE.Vector3();
@@ -185,5 +185,9 @@ export function createTendrilFromRaycasts( raycastFunc, startPoint, direction, o
 
     }
 
-    return createTendrilGeometry(points, options);
+    const geom =  createTendrilGeometry(points, options);
+    geom.userData = {
+      points,
+    }
+    return geom
 }

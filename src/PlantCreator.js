@@ -24,6 +24,8 @@ function createCollisMesh (visMesh, tag) {
   let currGeom = null;
   let currSize = 0;
   let plantCollis;
+  let currSeed;
+
 let bulbMaterial=null;
 
 let currPos = new THREE.Vector3();
@@ -33,46 +35,98 @@ let currPos = new THREE.Vector3();
 
     const currTime = new Date().getTime();
 
-
+    const bend = 0.2;
 
     if(currTime>=nextCreation) {
 
        const creationTime = (currTime - nextCreation)*0.001;
       
        if(!currGeom) {
-        for(let j=0;j<20;j++) {
-     
-            const isectRes = worldRayCastCB(new THREE.Vector3(-12+Math.random()*20,5,-30+Math.random()*30),new THREE.Vector3(0,-1,0), );
+
+        bulbMaterial = new THREE.MeshStandardMaterial();
+        bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
+
+        const direc = new THREE.Vector3(Math.random()*2.0-1.0, 0.0, Math.random()*2.0-1.0);
+        direc.normalize();
+              
+        const tendrilGeom = createTendrilFromRaycasts(worldRayCastCB, currPos,   direc, {
+            maxPoints: 80,
+            radius: 0.1+currSize*0.1,
+            height: 0.1+currSize*0.1,
+            maxStepDist: 0.25,
+        });
+
+        const points = tendrilGeom.userData.points;
+
+        if(plantCollis) {
+
+  
+          const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
       
-            if(isectRes)
-            {
-
-                currSize = Math.random();
-                currPos.copy(isectRes.point);
-              var geometry = createBulbGeometry({
-                    stemRadius:0.0001,
-                    bulbRadius: 0.0001,
-
-                    height:0.0001,
-                    position:currPos,
-                });
-                currGeom = geometry;
-
-                bulbMaterial = new THREE.MeshStandardMaterial();
-                bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
-                const plant = new THREE.Mesh( geometry,  bulbMaterial);
-
-
-                scene.add( plant );
-            
-                plantCollis = createCollisMesh(plant,"Plant");
-
-                plantCollis.userData.root = plantCollis;
-                isectRoot.add(plantCollis);
-
-                break;
-            }
+          const tendrilCollis = createCollisMesh(tendril,"Plant");
+  
+              plantCollis.userData.children.push(tendrilCollis);
+          tendrilCollis.userData.root = plantCollis;
+  
+          isectRoot.add(tendrilCollis);
+          scene.add(tendril);
         }
+        
+
+        const nextMove= Math.random()>0.8;
+
+        if(!plantCollis||nextMove ) {
+
+            if(Math.random()<0.2) {
+                for(let j=0;j<2000;j++) {
+     
+                    const isectRes = worldRayCastCB(new THREE.Vector3(-12+Math.random()*20,5,-30+Math.random()*30),new THREE.Vector3(0,-1,0), );
+                
+                    if(isectRes)
+                    {
+                        currPos.copy(isectRes.point);
+                        break;
+                    }
+                }
+                   
+            }
+            else  {
+                let idx = ~~(points.length*Math.random());
+                idx = Math.min(idx+4, points.length-1);
+
+                currPos.copy(points[idx]);
+            }
+
+
+            currSize = Math.random();
+            currSeed = ~~(new Date().getTime());
+
+            var geometry = createBulbGeometry({
+                stemRadius:0.0001,
+                bulbRadius: 0.0001,
+
+                height:0.0001,
+                position:currPos,
+                seed:currSeed,
+                bend,
+            });
+            currGeom = geometry;
+
+            const plant = new THREE.Mesh( geometry,  bulbMaterial);
+
+
+            scene.add( plant );
+        
+            plantCollis = createCollisMesh(plant,"Plant");
+
+            plantCollis.userData.root = plantCollis;
+            isectRoot.add(plantCollis);
+
+        }
+        else {
+            nextCreation=currTime+Math.random()*500;
+        }
+
                 
   
         
@@ -91,6 +145,8 @@ let currPos = new THREE.Vector3();
 
                     height:s*(1.0+currSize*1.0),
                     position:currPos,
+                    seed:currSeed,
+                    bend,
                 })
 
 
@@ -104,33 +160,11 @@ let currPos = new THREE.Vector3();
 
                     height:(1.0+currSize*1.0),
                     position:currPos,
+                    seed:currSeed,
+                    bend,
                 })
-                for(let i=0;i<5;i++) {
-          
-          
-                    const direc = new THREE.Vector3(Math.random()*2.0-1.0, 0.0, Math.random()*2.0-1.0);
-                    direc.normalize();
-              
-                    
-                    const tendrilGeom = createTendrilFromRaycasts(worldRayCastCB, currPos,   direc, {
-                      maxPoints: 50,
-                      radius: 0.1+currSize*0.1,
-                      height: 0.1+currSize*0.1,
-                      maxStepDist: 0.1,
-                    });
-                
-                    const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
-                
-                    const tendrilCollis = createCollisMesh(tendril,"Plant");
-    
-                    plantCollis.userData.children.push(tendrilCollis);
-                    tendrilCollis.userData.root = plantCollis;
-    
-                    isectRoot.add(tendrilCollis);
-                    scene.add(tendril);
-                
-                  }
-                nextCreation=currTime+Math.random()*5000;
+
+                nextCreation=currTime+Math.random()*1000;
                 currGeom = null;
             }
        }
@@ -149,6 +183,17 @@ export function startCreator(worldRayCastCB, sceneRayCastCB, scene, isectRoot) {
 
     window.requestAnimationFrame(runFunc);
    };
+
+   for(let j=0;j<2000;j++) {
+     
+    const isectRes = worldRayCastCB(new THREE.Vector3(-12+Math.random()*20,5,-30+Math.random()*30),new THREE.Vector3(0,-1,0), );
+
+    if(isectRes)
+    {
+        currPos.copy(isectRes.point);
+        break;
+    }
+   }
 
    runFunc();
 

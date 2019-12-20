@@ -1,5 +1,8 @@
 import * as THREE from 'three'
+
 import { Vector4 } from 'three';
+
+import { Random, MersenneTwister19937 } from "random-js";
 
 export function setBulbGeometry(geometry, options) {
   options = options || {};
@@ -16,20 +19,40 @@ export function setBulbGeometry(geometry, options) {
 
   const pos  = options.position || new THREE.Vector3();
 
+  const seed = options.seed || 13;
+  const bend = options.bend || 0.1;
+
+  const random = new Random(MersenneTwister19937.seed(seed));
+
   // generate vertices, normals and color data for a simple grid geometry
 
   const offsets = [];
   //new THREE.Vector3();
+  const offsetDirec = new THREE.Vector3();
+  offsetDirec.x =random.real(-1,+1)
+  offsetDirec.z = random.real(-1,+1)
+  offsetDirec.normalize();
 
   const offsetNoiseMag = options.noiseMag || 0.01;
   for ( var j = 0; j <= segments; j ++ ) {
     const v = j*vIncr;
-    
-    offsets.push(new THREE.Vector3(
-      offsetNoiseMag*(Math.random()-0.5),
-      0.0,
-      offsetNoiseMag*(Math.random()-0.5),
-    ));
+    const ov = v*v;
+
+    const bulbHeight = options.bulbHeight ||0.5;
+    const bulbStart = 1.0-bulbHeight;
+    const baseHeight = options.baseHeight || 0.1;
+    const offset= new THREE.Vector3();
+    if( v>baseHeight)
+    {
+      if(v<bulbStart) {
+        offset.x = bend*ov*offsetDirec.x;
+        offset.z = bend*ov*offsetDirec.z;
+      } else {
+        offset.x = offsets[j-1].x;
+        offset.z = offsets[j-1].z;
+      }
+    }
+    offsets.push(offset);
 
 
   }
@@ -45,7 +68,7 @@ export function setBulbGeometry(geometry, options) {
   
   for ( var i = 0; i <= segments; i ++ ) {
 
-    const ro = Math.random();
+    const ro = random.real(0,1);
     for ( var j = 0; j <= segments; j ++ ) {
 
 
@@ -84,21 +107,20 @@ export function setBulbGeometry(geometry, options) {
         b+= b*0.25*ro;
         d = Math.max(b,stemRadius);
 
-      } else {
-        ox=offsets[j].x;
-        oz=offsets[j].z;
-      }
-      
-      const randOffset = (Math.random() -0.5) * noiseMag;
+      } 
+      ox=offsets[j].x;
+      oz=offsets[j].z;
+
+      const randOffset = (random.real(0,1) -0.5) * noiseMag;
       d+=randOffset;
 
       let x = -d*Math.cos(phi) + ox;
       let z = d*Math.sin(phi) + oz;
       let y = v * height;
 
-      x+=pos.x;
+      x+=ox+pos.x;
       y+=pos.y;
-      z+=pos.z;
+      z+=oz+pos.z;
       const vidx = i*(segments+1) + j;
 
       vertices[vidx*3+0] = x;
