@@ -11,7 +11,10 @@ export function setBulbGeometry(geometry, options) {
   var uIncr = 1.0/(segments-1);
   var vIncr = 1.0/(segments);
 
+
   const height =  options.height || 2.0;
+
+  const pos  = options.position || new THREE.Vector3();
 
   // generate vertices, normals and color data for a simple grid geometry
 
@@ -89,10 +92,13 @@ export function setBulbGeometry(geometry, options) {
       const randOffset = (Math.random() -0.5) * noiseMag;
       d+=randOffset;
 
-      const x = -d*Math.cos(phi) + ox;
-      const z = d*Math.sin(phi) + oz;
-      const y = v * height;
+      let x = -d*Math.cos(phi) + ox;
+      let z = d*Math.sin(phi) + oz;
+      let y = v * height;
 
+      x+=pos.x;
+      y+=pos.y;
+      z+=pos.z;
       const vidx = i*(segments+1) + j;
 
       vertices[vidx*3+0] = x;

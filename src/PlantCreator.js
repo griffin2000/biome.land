@@ -14,6 +14,8 @@ function createCollisMesh (visMesh, tag) {
     tag = tag || "";
     mesh.userData = {
       tag,
+      visMesh,
+      children:[],
     };
     return mesh;
   }
@@ -27,18 +29,7 @@ function createCollisMesh (visMesh, tag) {
 
 
     if(currTime>=nextCreation) {
-        var geometry = createBulbGeometry({
-            stemRadius:0.05,
-            buldRadius: 0.2,
-            height:2.0,
-        });
-    
-        const bulbMaterial = new THREE.MeshStandardMaterial();
-        bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
-        const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
-        scene.add( firstPlant );
-      
-        isectRoot.add(createCollisMesh(firstPlant,"Plant"));
+
       
       
       
@@ -48,11 +39,33 @@ function createCollisMesh (visMesh, tag) {
       
             if(isectRes)
             {
-              firstPlant.position.x = isectRes.point.x;
-              firstPlant.position.y = isectRes.point.y;
-              firstPlant.position.z = isectRes.point.z;
+
+             const s = Math.random();
           
-              
+              var geometry = createBulbGeometry({
+                    stemRadius:0.03+s*0.02,
+                    bulbRadius: 0.1+s*0.02,
+                    
+                    height:1.0+s*1.0,
+                    position:isectRes.point,
+                });
+            
+                const bulbMaterial = new THREE.MeshStandardMaterial();
+                bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
+                const plant = new THREE.Mesh( geometry,  bulbMaterial);
+/*
+                plant.position.x = isectRes.point.x;
+                plant.position.y = isectRes.point.y;
+                plant.position.z = isectRes.point.z;
+*/
+
+                scene.add( plant );
+            
+                const plantCollis = createCollisMesh(plant,"Plant");
+
+                plantCollis.userData.root = plantCollis;
+             const collisObj = [];
+             collisObj.push(plantCollis);
           
               for(let i=0;i<5;i++) {
           
@@ -63,16 +76,29 @@ function createCollisMesh (visMesh, tag) {
                 
                 const tendrilGeom = createTendrilFromRaycasts(sceneRayCastCB, isectRes.point,   direc, {
                   maxPoints: 50,
-                  radius: 0.25,
+                  radius: 0.1+s*0.1,
+                  height: 0.1+s*0.1,
                   maxStepDist: 0.1,
                 });
             
                 const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
             
-                isectRoot.add(createCollisMesh(tendril,"Plant"));
+                const tendrilCollis = createCollisMesh(tendril,"Plant");
+
+                plantCollis.userData.children.push(tendrilCollis);
+                tendrilCollis.userData.root = plantCollis;
+
+                collisObj.push(tendrilCollis);
                 scene.add(tendril);
             
               }
+
+                      
+              for(let i=0;i<collisObj.length;i++) {
+                isectRoot.add(collisObj[i]);
+            }
+
+
               break;
             }     
         }

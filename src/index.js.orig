@@ -10,7 +10,6 @@ var camera;
 var controls;
 var currentPosition;
 var crosshair;
-let currentObject = null;
 
 function loadGLTF(filename) {
   return new Promise((resolve,reject)=>{
@@ -32,6 +31,9 @@ function loadGLTF(filename) {
   )
   });
 }
+
+<<<<<<< HEAD
+=======
 function loadCrosshair() {
   var loader = new THREE.ImageLoader();
 
@@ -55,15 +57,21 @@ function loadCrosshair() {
     }
   );
 }
-function CatmullRom( t, p0, p1, p2, p3 ) {
 
-	var v0 = ( p2 - p0 ) * 0.5;
-	var v1 = ( p3 - p1 ) * 0.5;
-	var t2 = t * t;
-	var t3 = t * t2;
-	return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
-
+function createCollisMesh (visMesh, tag) {
+  const mesh = new THREE.Mesh(visMesh.geometry,visMesh.material);
+  mesh.position.copy(visMesh.position);
+  mesh.scale.copy(visMesh.scale);
+  mesh.quaternion.copy(visMesh.quaternion);
+  
+  tag = tag || "";
+  mesh.userData = {
+    tag,
+  };
+  return mesh;
 }
+
+>>>>>>> b00408c77b4d38454fe53b1cd91c452f0477e75a
 async function init() {
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -77,22 +85,7 @@ async function init() {
 
   controls = new FirstPersonControls(camera);
   const scene = new THREE.Scene()
-
   
-  var cameraPosSpline = [
-    new THREE.Vector3( -7, 0, -21 ),
-    new THREE.Vector3( -7, 0, - 10 ),
-    new THREE.Vector3( -7, 0, +10 ),
-     new THREE.Vector3( -7, 0, +21 ),
-  ] ;
-
-  var cameraTargetSpline = [
-    new THREE.Vector3( 0,0,-10 ),
-    new THREE.Vector3( 0,0,-10),
-    new THREE.Vector3( 0,0,-10),
-     new THREE.Vector3(0,0,-10 ),
-  ] ;
-
   //var player = controls.getObject();
   //scene.add(player);
 
@@ -127,6 +120,11 @@ async function init() {
   scene.add(mesh);
 
 
+
+  const bulbMaterial = new THREE.MeshStandardMaterial();
+  bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
+  const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
+  scene.add( firstPlant )
   
 
   const raycastFunc  = (origin,direction)=>{
@@ -149,33 +147,6 @@ async function init() {
 
 
   const render = () =>{
-    const currTime = new Date().getTime();
-
-    let t = currTime*0.0001;
-  
-    t = t-Math.floor(t);
-  
-    if(t<0.5) {
-      t*=2.0;
-
-    }
-    else {
-      t = t-0.5;
-      t *=2.0;
-      t = 1.0 -t;
-    }
-
-    cameraPos.x = CatmullRom(t, cameraPosSpline[0].x,cameraPosSpline[1].x,cameraPosSpline[2].x,cameraPosSpline[3].x, );
-    cameraPos.y = CatmullRom(t, cameraPosSpline[0].y,cameraPosSpline[1].y,cameraPosSpline[2].y,cameraPosSpline[3].y, );
-    cameraPos.z = CatmullRom(t, cameraPosSpline[0].z,cameraPosSpline[1].z,cameraPosSpline[2].z,cameraPosSpline[3].z, );
-
-    cameraTarget.x = CatmullRom(t, cameraTargetSpline[0].x,cameraTargetSpline[1].x,cameraTargetSpline[2].x,cameraTargetSpline[3].x, );
-    cameraTarget.y = CatmullRom(t, cameraTargetSpline[0].y,cameraTargetSpline[1].y,cameraTargetSpline[2].y,cameraTargetSpline[3].y, );
-    cameraTarget.z = CatmullRom(t, cameraTargetSpline[0].z,cameraTargetSpline[1].z,cameraTargetSpline[2].z,cameraTargetSpline[3].z, );
-
-    camera.position.copy(cameraPos);
-    camera.lookAt(cameraTarget);
-    
     renderer.render(scene, camera);
   }
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
@@ -183,7 +154,7 @@ async function init() {
   //geometry.rotateX( Math.PI / 2 );
   startCreator(raycastWorldFunc, raycastFunc, scene, isectRoot);
 
-      
+  
 
   const mouse = new THREE.Vector2();
 
@@ -194,19 +165,12 @@ async function init() {
     raycaster.setFromCamera( mouse, camera );
 
     // See if the ray from the camera into the world hits one of our meshes
-    var intersects = raycaster.intersectObject( isectRoot , true);
-    currentObject = null;
-    for(let i=0;i<intersects.length;i++) {
-      if(intersects[i] && intersects[i].object.userData.tag) {
-        currentObject = intersects[i].object;
-        break;
-      }
-    }
+    var intersects = raycaster.intersectObject( collisMesh );
+
     if(intersects[0])
     {
       currentPosition = new THREE.Vector3(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z) 
-    } 
-
+    }
     console.log("client", event.clientX, event.clientY)
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(crosshair, event.clientX - crosshair.width/2, event.clientY - crosshair.height/2)
@@ -215,18 +179,49 @@ async function init() {
   function onMouseClick() {
     console.log('mesh')
 
-    if(currentObject) {
-      const root = currentObject.userData.root;
+    if(!currentPosition)
+      return;
 
-      isectRoot.remove(root);
-      scene.remove(root.userData.visMesh);
-      for(let i=0;i<root.userData.children.length;i++) {
-        const child = root.userData.children[i];
-        
-      isectRoot.remove(child);
-      scene.remove(child.userData.visMesh);
-      }
+    const s = Math.random();
+
+    var geometry = createBulbGeometry({
+      stemRadius:0.05 + s*0.05,
+      buldRadius: 0.2 + s*0.1,
+      height:2.0+2.0*s,
+    });
+
+    const bulbMaterial = new THREE.MeshStandardMaterial();
+    const newMesh = new THREE.Mesh( geometry, bulbMaterial )
+    newMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z)
+    newMesh.scale.x = 0.2;
+    newMesh.scale.y = 0.2;
+    newMesh.scale.z = 0.2;
+    scene.add(newMesh);
+    const collisMeshes = [];
+    collisMeshes.push(createCollisMesh(newMesh,"Plant"))
+    for(let i=0;i<5;i++) {
+
+
+      const direc = new THREE.Vector3(Math.random()*2.0-1.0, 0.0, Math.random()*2.0-1.0);
+      direc.normalize();
+
+      
+      const tendrilGeom = createTendrilFromRaycasts(raycastFunc, currentPosition,   direc, {
+        maxPoints: 50,
+        radius: 0.03 + s*0.06,
+        height: 0.01 + s*0.1,
+        maxStepDist: 0.5,
+      });
+  
+      const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
+  
+      collisMeshes.push(createCollisMesh(tendril,"Plant"));
+      scene.add(tendril);
+  
     }
+    for(let i=0;i<collisMesh.length;i++)
+      isectRoot.add(collisMeshes[i]);
+
   }
   
   window.addEventListener('mousemove', onMouseMove, false );
@@ -242,12 +237,8 @@ async function init() {
   console.log("init");
 }
 
-const cameraPos = new THREE.Vector3();
-const cameraTarget = new THREE.Vector3();
 
 function animate() {
-
-
   requestAnimationFrame( animate );
   //controls.update();
 }
