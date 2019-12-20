@@ -80,16 +80,16 @@ async function init() {
 
   
   var cameraPosSpline = [
-    new THREE.Vector3( -7, 0, -21 ),
-    new THREE.Vector3( -7, 0, - 10 ),
-    new THREE.Vector3( -7, 0, +10 ),
-     new THREE.Vector3( -7, 0, +21 ),
+    new THREE.Vector3( -8, 1, -25 ),
+    new THREE.Vector3( -8, 1, - 30 ),
+    new THREE.Vector3( -8, 1, 20 ),
+     new THREE.Vector3( -8, 1, -25),
   ] ;
 
   var cameraTargetSpline = [
-    new THREE.Vector3( 0,0,-10 ),
-    new THREE.Vector3( 0,0,-10),
-    new THREE.Vector3( 0,0,-10),
+    new THREE.Vector3( 7,0,-10 ),
+    new THREE.Vector3( 7,0,-10),
+    new THREE.Vector3( 15,0,-10),
      new THREE.Vector3(0,0,-10 ),
   ] ;
 
