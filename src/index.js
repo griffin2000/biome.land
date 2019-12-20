@@ -3,6 +3,7 @@ import {GLTFLoader} from './third-party/GLTFLoader'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
 import {createBulbGeometry} from './Bulb'
 import {createTendrilGeometry, createTendrilFromRaycasts} from './Tendril'
+import {startCreator} from './PlantCreator'
 
 var camera;
 var controls;
@@ -29,18 +30,6 @@ function loadGLTF(filename) {
   });
 }
 
-function createCollisMesh (visMesh, tag) {
-  const mesh = new THREE.Mesh(visMesh.geometry,visMesh.material);
-  mesh.position.copy(visMesh.position);
-  mesh.scale.copy(visMesh.scale);
-  mesh.quaternion.copy(visMesh.quaternion);
-  
-  tag = tag || "";
-  mesh.userData = {
-    tag,
-  };
-  return mesh;
-}
 async function init() {
   const canvas = document.getElementById('canvas');
   const renderer = new THREE.WebGLRenderer( { 
@@ -56,7 +45,6 @@ async function init() {
   scene.background = new THREE.Color( 0xAAAAAA );
 
   const raycaster = new THREE.Raycaster();
-  raycaster.set(new THREE.Vector3(-5,5,-16),new THREE.Vector3(0,-1,0), );
   // See if the ray from the camera into the world hits one of our meshes
 
 
@@ -85,16 +73,7 @@ async function init() {
   var mesh = gltf.scene.children[ 0 ];
   scene.add(mesh);
 
-  var intersects = raycaster.intersectObject( collisMesh );
-  const render = () =>{
-    renderer.render(scene, camera);
-  }
 
-  var geometry = createBulbGeometry({
-    stemRadius:0.05,
-    buldRadius: 0.2,
-    height:2.0,
-  });
 
   const raycastFunc  = (origin,direction)=>{
     raycaster.set(origin, direction);
@@ -104,45 +83,26 @@ async function init() {
 
     return intersects[0];
   }
+
+  const raycastWorldFunc = (origin,direction)=>{
+    raycaster.set(origin, direction);
+    var intersects = raycaster.intersectObject( collisMesh);
+    if(intersects.length==0)
+      return null;
+
+    return intersects[0];
+  }
+
+
+  const render = () =>{
+    renderer.render(scene, camera);
+  }
   //const geometry = new THREE.BoxBufferGeometry(0.4,0.4,0.4);
   //geometry.translate( 0, 50, 0 );
   //geometry.rotateX( Math.PI / 2 );
-  const bulbMaterial = new THREE.MeshStandardMaterial();
-  bulbMaterial.color = new THREE.Color(0.1,1.0,0.2);
-  const firstPlant = new THREE.Mesh( geometry,  bulbMaterial);
-  scene.add( firstPlant );
+  startCreator(raycastWorldFunc, raycastFunc, scene, isectRoot);
 
-  isectRoot.add(createCollisMesh(firstPlant,"Plant"));
-
-  if(intersects[0])
-  {
-    firstPlant.position.x = intersects[0].point.x;
-    firstPlant.position.y = intersects[0].point.y;
-    firstPlant.position.z = intersects[0].point.z;
-
-    
-
-    for(let i=0;i<5;i++) {
-
-
-      const direc = new THREE.Vector3(Math.random()*2.0-1.0, 0.0, Math.random()*2.0-1.0);
-      direc.normalize();
-
-      
-      const tendrilGeom = createTendrilFromRaycasts(raycastFunc, intersects[0].point,   direc, {
-        maxPoints: 50,
-        radius: 0.25,
-        maxStepDist: 0.1,
-      });
   
-      const tendril =  new THREE.Mesh( tendrilGeom,  bulbMaterial);
-  
-      isectRoot.add(createCollisMesh(tendril,"Plant"));
-      scene.add(tendril);
-  
-    }
-    
-  }
 
   const mouse = new THREE.Vector2();
 
@@ -176,6 +136,7 @@ async function init() {
       height:2.0+2.0*s,
     });
 
+    const bulbMaterial = new THREE.MeshStandardMaterial();
     const newMesh = new THREE.Mesh( geometry, bulbMaterial )
     newMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z)
     newMesh.scale.x = 0.2;
